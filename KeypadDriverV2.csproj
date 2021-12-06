@@ -10,6 +10,22 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="res\**" />
+    <EmbeddedResource Remove="res\**" />
+    <None Remove="res\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="src\Resources\Icon.ico" />
+    <None Remove="src\Resources\Icon.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="src\Resources\Icon.ico" />
+    <EmbeddedResource Include="src\Resources\Icon.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="SFML.Net" Version="2.5.0" />
   </ItemGroup>
 

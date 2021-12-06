@@ -1,11 +1,16 @@
-﻿using System;
+﻿using SFML.Graphics;
+using System;
 using System.Collections.Generic;
+using System.Drawing;
+using Image = System.Drawing.Image;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using static KeypadDriverV2.Win32;
+using System.Reflection;
+using System.IO;
 
 namespace KeypadDriverV2
 {
@@ -13,18 +18,14 @@ namespace KeypadDriverV2
     {
         private bool disposed = false;
         private NotifyIconData notifyIconData;
-        private Window window;
+        private KeypadDriverWindow window;
+        private Image windowIcon;
+        private IntPtr hWindowIcon;
 
         public void Run()
         {
-            window = new Window("keypadDriver")
-            {
-                WndProc = (IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam) =>
-                {
-                    Console.WriteLine($"Received message {msg.ToString("X4")} {wParam.ToString("X4")} {lParam.ToString("X4")}");
-                    return DefWindowProc(hWnd, msg, wParam, lParam);
-                }
-            };
+            LoadResources();
+            window = new KeypadDriverWindow(hWindowIcon, 750, 500);
 
             notifyIconData = new NotifyIconData
             {
@@ -39,7 +40,19 @@ namespace KeypadDriverV2
             if (Shell_NotifyIcon(NotifyIconMessage.Add, ref notifyIconData) == false)
                 throw new Exception("Cannot create notify icon");
 
+            window.ShowWindow();
+
             Thread.Sleep(10000);
+        }
+
+        private void LoadResources()
+        {
+            Assembly assembly = Assembly.GetExecutingAssembly();
+            string[] resourceNames = assembly.GetManifestResourceNames();
+
+            using (Stream stream = assembly.GetManifestResourceStream(resourceNames.Single(s => s.EndsWith("Icon.ico"))))
+                windowIcon = Image.FromStream(stream);
+            hWindowIcon = ((Bitmap)windowIcon).GetHicon();
         }
 
         public void Dispose()
@@ -56,11 +69,12 @@ namespace KeypadDriverV2
                 if (disposing)
                 {
                     window.Dispose();
-                    window = null;
+                    windowIcon.Dispose();
                 }
 
                 // Unmanaged
                 Shell_NotifyIcon(NotifyIconMessage.Delete, ref notifyIconData);
+                DestroyIcon(hWindowIcon);
 
                 disposed = true;
             }
