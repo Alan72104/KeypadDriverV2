@@ -1,97 +1,81 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using static KeypadDriverV2.Win32;
+﻿using OpenTK.Graphics.OpenGL4;
+using OpenTK.Windowing.Desktop;
+using OpenTK.Windowing.Common;
+using OpenTK.Windowing.GraphicsLibraryFramework;
+using KeypadDriverV2.Graphics;
+using KeypadDriverV2.IO;
 
 namespace KeypadDriverV2
 {
-    public class KeypadDriverWindow : IDisposable
+    public class KeypadDriverWindow : GameWindow
     {
-        private const int ERROR_CLASS_ALREADY_EXISTS = 1410;
-
-        private bool disposed;
-        private IntPtr hWnd;
-        private WndProc wndProc;
-        public IntPtr HWnd { get => hWnd; }
-        private int width;
-        private int height;
-
-        public KeypadDriverWindow(IntPtr hIcon, int width, int height)
+        private readonly float[] vertices =
         {
-            wndProc = CustomWndProc;
-            string name = "KeypadDriver";
-            this.width = width;
-            this.height = height;
+            -0.5f, -0.5f, 0.0f, // Bottom-left vertex
+             0.5f, -0.5f, 0.0f, // Bottom-right vertex
+             0.0f,  0.5f, 0.0f  // Top vertex
+        };
+        private int vertexBufferObject;
+        private int vertexArrayObject;
+        private Shader shader;
 
-            WndClass wndClass = new WndClass();
-            wndClass.ClassName = name;
-            wndClass.HIcon = hIcon;
-            wndClass.FnWndProc = Marshal.GetFunctionPointerForDelegate(wndProc);
+        public KeypadDriverWindow(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings) : base(gameWindowSettings, nativeWindowSettings)
+        {
+        }
 
-            ushort atom = RegisterClass(ref wndClass);
+        protected override void OnLoad()
+        {
+            base.OnLoad();
 
-            int lastError = Marshal.GetLastWin32Error();
+            GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
-            if (atom == 0 && lastError != ERROR_CLASS_ALREADY_EXISTS)
+            vertexBufferObject = GL.GenBuffer();
+
+            GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBufferObject);
+
+            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
+
+            vertexArrayObject = GL.GenVertexArray();
+            GL.BindVertexArray(vertexArrayObject);
+
+
+            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), 0);
+            GL.EnableVertexAttribArray(0);
+
+            shader = new Shader("shader", "shader");
+
+        }
+
+        protected override void OnUpdateFrame(FrameEventArgs e)
+        {
+            base.OnUpdateFrame(e);
+
+            if (KeyboardState.IsKeyDown(Keys.Escape))
             {
-                throw new Exception("Cannot register window class");
+                Close();
             }
-
-            hWnd = CreateWindowEx(0,
-                                  name,
-                                  string.Empty,
-                                  0,
-                                  0,
-                                  0,
-                                  width,
-                                  height,
-                                  IntPtr.Zero,
-                                  IntPtr.Zero,
-                                  IntPtr.Zero,
-                                  IntPtr.Zero);
         }
 
-        public void ShowWindow()
+        protected override void OnRenderFrame(FrameEventArgs e)
         {
-            AnimateWindow(hWnd, 1000, AnimateWindowEnums.Blend);
+            base.OnRenderFrame(e);
+
+            GL.Clear(ClearBufferMask.ColorBufferBit);
+
+            shader.Bind();
+
+            GL.BindVertexArray(vertexArrayObject);
+
+            GL.DrawArrays(PrimitiveType.Triangles, 0, 3);
+
+            SwapBuffers();
         }
 
-        public void HideWindow()
+        protected override void OnResize(ResizeEventArgs e)
         {
-            AnimateWindow(hWnd, 200, AnimateWindowEnums.Blend | AnimateWindowEnums.Hide);
-        }
+            base.OnResize(e);
 
-        private IntPtr CustomWndProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam)
-        {
-            System.Diagnostics.Debug.Print($"Received message {Enum.GetName((WM)msg) ?? msg.ToString("X4")} {wParam.ToString("X4")} {lParam.ToString("X4")}");
-            return DefWindowProc(hWnd, msg, wParam, lParam);
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        private void Dispose(bool disposing)
-        {
-            if (!disposed)
-            {
-                // Managed
-                if (disposing)
-                {
-                }
-
-                // Unmanaged
-                if (hWnd != IntPtr.Zero)
-                    DestroyWindow(hWnd);
-
-                disposed = true;
-            }
+            GL.Viewport(0, 0, Size.X, Size.Y);
         }
     }
 }

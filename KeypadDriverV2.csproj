@@ -6,7 +6,7 @@
 	<UseWindowsForms>true</UseWindowsForms>
     <ApplicationIcon />
     <StartupObject />
-    <Platforms>AnyCPU;x86</Platforms>
+    <Platforms>AnyCPU;x86;x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,15 +18,19 @@
   <ItemGroup>
     <None Remove="src\Resources\Icon.ico" />
     <None Remove="src\Resources\Icon.png" />
+    <None Remove="src\Resources\Shaders\shader.frag" />
+    <None Remove="src\Resources\Shaders\shader.vert" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="src\Resources\Icon.ico" />
     <EmbeddedResource Include="src\Resources\Icon.png" />
+    <EmbeddedResource Include="src\Resources\Shaders\shader.frag" />
+    <EmbeddedResource Include="src\Resources\Shaders\shader.vert" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="SFML.Net" Version="2.5.0" />
+    <PackageReference Include="OpenTK" Version="4.6.7" />
   </ItemGroup>
 
 </Project>
