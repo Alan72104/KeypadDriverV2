@@ -1,8 +1,8 @@
-﻿#version 330
+﻿#version 400 core
 
-in vec3 aPosition;
+in vec3 inPosition;
 
 void main(void)
 {
-    gl_Position = vec4(aPosition, 1.0);
+    gl_Position = vec4(inPosition, 1.0);
 }
